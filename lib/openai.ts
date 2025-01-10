@@ -10,6 +10,14 @@ export interface GeneratedTask {
   details: string;
 }
 
+interface OpenAITaskResponse {
+  tasks: {
+    task: string;
+    priority: string;
+    details: string;
+  }[];
+}
+
 export async function generateTasks(goal: string): Promise<GeneratedTask[]> {
   try {
     const completion = await openai.chat.completions.create({
@@ -56,12 +64,12 @@ export async function generateTasks(goal: string): Promise<GeneratedTask[]> {
     }
 
     try {
-      const parsed = JSON.parse(content);
+      const parsed = JSON.parse(content) as OpenAITaskResponse;
       if (!Array.isArray(parsed.tasks)) {
         console.error('Invalid response format:', content);
         return [];
       }
-      return parsed.tasks.map(task => ({
+      return parsed.tasks.map((task): GeneratedTask => ({
         task: String(task.task),
         priority: task.priority as '高' | '中' | '低',
         details: String(task.details)
